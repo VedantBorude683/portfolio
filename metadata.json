@@ -1,0 +1,6 @@
+{
+  "name": "Vedant Borude - Windows 7 Portfolio",
+  "description": "Interactive Windows 7 Aero simulation portfolio for Full Stack Developer Vedant Borude.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
