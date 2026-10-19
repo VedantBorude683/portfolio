@@ -13,7 +13,7 @@ export interface ProjectItem {
   techStack: string[];
   liveUrl?: string;
   githubUrl?: string;
-  screenshots: { title: string; caption: string; color: string; asciiArt?: string }[];
+  screenshots: { title: string; caption: string; color: string; image?: string; asciiArt?: string }[];
   highlight: string;
   metrics?: string[];
 }
@@ -117,7 +117,6 @@ high-impact collaboration opportunities.
       'Basic System Design & Principles',
     ],
     highlights: [
-      'Top 3% academic percentile in Computer Engineering cohort with 9.40 CGPA.',
       'Active contributor to tech symposiums, code sprints, and system design groups.',
       'Hands-on lab excellence in Linux kernel processes, relational calculus, and algorithmic analysis.',
     ],
@@ -173,7 +172,7 @@ ARCHITECTURE & FLOW:
 
 2. Asynchronous Java Workers:
    - Consumer groups consume events concurrently with strict idempotency.
-   - Workers analyze schema diffs using the DeepSeek LLM to identify downstream 
+   - Workers analyze schema diffs using AI-assisted semantic analysis to identify downstream
      service consumer contract violations.
    - Generates comprehensive impact graphs identifying all affected downstream microservices.
 
@@ -188,7 +187,7 @@ ARCHITECTURE & FLOW:
 TECH STACK:
 - Backend: Java, Spring Boot, Apache Kafka
 - Database: MongoDB
-- AI/LLM: DeepSeek LLM for semantic diff & contract impact validation
+- AI/LLM: Semantic diff & contract impact validation
 - Frontend: JavaScript, Chrome Extension API (Manifest v3), GitHub Webhooks API
 - Testing & Deploy: Docker, JUnit 5, Mockito
 ================================================================================`,
@@ -200,7 +199,7 @@ TECH STACK:
         'JavaScript',
         'Chrome Extension API',
         'GitHub Webhooks',
-        'DeepSeek LLM',
+        'Semantic Analysis',
         'Docker',
       ],
       metrics: [
@@ -213,14 +212,16 @@ TECH STACK:
           title: 'GitHub PR Extension Injection',
           caption: 'Interactive graph highlighting breaking downstream endpoints directly in pull request review',
           color: '#1e3a8a',
+          image: '/images/tether/github-pr-tether.png',
         },
         {
-          title: 'Kafka Event Topology',
-          caption: 'High-throughput partitioned topics for PR diff processing and async analysis',
+          title: 'Tether Architecture & Event Topology',
+          caption: 'Webhook, Kafka, AI analysis, threat reports, and browser alert flow',
           color: '#065f46',
+          image: '/images/tether/tether-architecture.png',
         },
         {
-          title: 'DeepSeek LLM Analysis Report',
+          title: 'Contract Impact Analysis Report',
           caption: 'Semantic reasoning on parameter type changes and missing required fields',
           color: '#701a75',
         },
@@ -278,6 +279,7 @@ TECH STACK:
         'Ultra low bandwidth peer-to-peer 720p/1080p video',
         'Automated database TTL purge ensuring zero message retention',
       ],
+      liveUrl: 'https://chatify-one-lyart.vercel.app/',
       screenshots: [
         {
           title: 'Split View Video & Chat',
@@ -471,7 +473,7 @@ TECH STACK:
       pinnedRepos: [
         {
           name: 'Tether-Microservice-Impact-Analyzer',
-          description: 'Automated breaking API contract change detection across microservices using Spring Boot, Kafka, and DeepSeek LLM.',
+          description: 'Automated breaking API contract change detection across microservices using Spring Boot, Kafka, and semantic analysis.',
           language: 'Java',
           stars: 48,
           forks: 12,

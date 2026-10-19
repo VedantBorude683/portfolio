@@ -137,9 +137,9 @@ export const ExplorerWindow: React.FC<ExplorerWindowProps> = ({ initialPath = 'C
           extension: 'url',
           size: '1.2 KB',
           dateModified: '2026-04-19',
-          iconType: 'browser_ie',
-          targetApp: 'browser_ie',
-          targetParams: { initialUrl: 'https://uber-eta-eight.vercel.app/', title: 'Vedant Borude - Live Portfolio' },
+          iconType: 'browser_opera',
+          targetApp: 'browser',
+          targetParams: { initialUrl: 'https://uber-eta-eight.vercel.app/', title: 'Vedant Borude - Live Portfolio', browserType: 'opera' },
           description: 'Live Portfolio & Projects Deployment (https://uber-eta-eight.vercel.app/)',
         },
         {
@@ -162,16 +162,6 @@ export const ExplorerWindow: React.FC<ExplorerWindowProps> = ({ initialPath = 'C
           iconType: 'pdf',
           targetApp: 'pdf',
           description: 'Official Software Engineer Resume (PDF format with Download)',
-        },
-        {
-          name: 'System Skills.sys',
-          type: 'file',
-          extension: 'sys',
-          size: '7.9 WEI',
-          dateModified: '2026-04-19',
-          iconType: 'control_panel',
-          targetApp: 'system',
-          description: 'Windows Experience Index 7.9 - Skill Ratings breakdown',
         },
       ];
     }
@@ -208,14 +198,180 @@ export const ExplorerWindow: React.FC<ExplorerWindowProps> = ({ initialPath = 'C
           },
           description: 'Comprehensive architectural documentation & stack breakdown',
         },
-        {
+      ];
+
+      if (projectMatch.id === 'tether') {
+        items.push({
           name: 'Screenshots & Topology',
           type: 'folder',
           dateModified: '2026-04-19',
           iconType: 'folder',
           description: 'Visual system diagrams & user interface captures',
-        },
-      ];
+        });
+      }
+
+      if (projectMatch.id === 'swiftride' && projectMatch.liveUrl) {
+        items.push({
+          name: 'Uber.exe',
+          type: 'file',
+          extension: 'exe',
+          size: '3.4 MB',
+          dateModified: '2026-04-19',
+          iconType: 'computer',
+          targetApp: 'external-executable',
+          targetParams: { url: 'https://www.uber.com/' },
+          description: 'Open the official Uber website',
+        });
+        items.push({
+          name: 'UberDriver.exe',
+          type: 'file',
+          extension: 'exe',
+          size: '2.1 MB',
+          dateModified: '2026-04-19',
+          iconType: 'computer',
+          targetApp: 'external-executable',
+          targetParams: { url: 'https://www.uber.com/drive/' },
+          description: 'Open the official Uber driver website',
+        });
+        items.push({
+          name: 'UberEats.exe',
+          type: 'file',
+          extension: 'exe',
+          size: '2.6 MB',
+          dateModified: '2026-04-19',
+          iconType: 'computer',
+          targetApp: 'external-executable',
+          targetParams: { url: 'https://www.ubereats.com/' },
+          description: 'Open the official Uber Eats website',
+        });
+        items.push({
+          name: 'UberClient.dll',
+          type: 'file',
+          extension: 'dll',
+          size: '648 KB',
+          dateModified: '2026-04-19',
+          iconType: 'computer',
+          description: 'Shared application runtime library',
+        });
+        items.push({
+          name: 'UberClient.ini',
+          type: 'file',
+          extension: 'ini',
+          size: '2 KB',
+          dateModified: '2026-04-19',
+          iconType: 'notepad',
+          targetApp: 'notepad',
+          targetParams: {
+            fileName: 'UberClient.ini',
+            content: `[application]\nname=Uber Client\nversion=1.0.0\nlaunch_target=https://www.uber.com/\n\n[features]\nride_booking=true\ndriver_portal=true\nuber_eats=true`,
+          },
+          description: 'Uber client launch configuration',
+        });
+        items.push({
+          name: 'UberLauncher.log',
+          type: 'file',
+          extension: 'log',
+          size: '6 KB',
+          dateModified: '2026-04-19',
+          iconType: 'notepad',
+          targetApp: 'notepad',
+          targetParams: {
+            fileName: 'UberLauncher.log',
+            content: `UBER LAUNCHER LOG\n==================\n[2026-04-19 10:02:37] Client initialized\n[2026-04-19 10:02:37] Main executable: Uber.exe\n[2026-04-19 10:02:37] Launch target: https://www.uber.com/\n[2026-04-19 10:02:38] Ready`,
+          },
+          description: 'Uber launcher startup log',
+        });
+        items.push({
+          name: 'Uber_ReadMe.txt',
+          type: 'file',
+          extension: 'txt',
+          size: '1.8 KB',
+          dateModified: '2026-04-19',
+          iconType: 'notepad',
+          targetApp: 'notepad',
+          targetParams: {
+            fileName: 'Uber_ReadMe.txt',
+            content: `UBER PROJECT FILES\n==================\n\nUber.exe\nLaunches the official Uber website.\n\nUberDriver.exe\nOpens the official Uber driver portal.\n\nUberEats.exe\nOpens the official Uber Eats website.\n\nThese executable shortcuts connect to the official web services in your browser.`,
+          },
+          description: 'Overview of the Uber project files',
+        });
+      }
+
+      if (projectMatch.id === 'chatify' && projectMatch.liveUrl) {
+        items.push({
+          name: 'Chatify.exe',
+          type: 'file',
+          extension: 'exe',
+          size: '3.1 MB',
+          dateModified: '2026-04-19',
+          iconType: 'computer',
+          targetApp: 'external-executable',
+          targetParams: { url: projectMatch.liveUrl },
+          description: 'Open the Chatify real-time messaging and video app',
+        });
+        items.push({
+          name: 'ChatifyClient.exe',
+          type: 'file',
+          extension: 'exe',
+          size: '2.4 MB',
+          dateModified: '2026-04-19',
+          iconType: 'computer',
+          targetApp: 'external-executable',
+          targetParams: { url: projectMatch.liveUrl },
+          description: 'Launch the Chatify client',
+        });
+        items.push({
+          name: 'ChatifyServer.dll',
+          type: 'file',
+          extension: 'dll',
+          size: '712 KB',
+          dateModified: '2026-04-19',
+          iconType: 'computer',
+          description: 'Shared real-time messaging runtime library',
+        });
+        items.push({
+          name: 'ChatifyClient.ini',
+          type: 'file',
+          extension: 'ini',
+          size: '2 KB',
+          dateModified: '2026-04-19',
+          iconType: 'notepad',
+          targetApp: 'notepad',
+          targetParams: {
+            fileName: 'ChatifyClient.ini',
+            content: `[application]\nname=Chatify Client\nversion=1.0.0\nlaunch_target=${projectMatch.liveUrl}\n\n[features]\nreal_time_chat=true\nvideo_calls=true\nwhisper_mode=true`,
+          },
+          description: 'Chatify client launch configuration',
+        });
+        items.push({
+          name: 'ChatifyLauncher.log',
+          type: 'file',
+          extension: 'log',
+          size: '5 KB',
+          dateModified: '2026-04-19',
+          iconType: 'notepad',
+          targetApp: 'notepad',
+          targetParams: {
+            fileName: 'ChatifyLauncher.log',
+            content: `CHATIFY LAUNCHER LOG\n====================\n[2026-04-19 10:02:37] Client initialized\n[2026-04-19 10:02:37] Main executable: Chatify.exe\n[2026-04-19 10:02:37] Launch target: ${projectMatch.liveUrl}\n[2026-04-19 10:02:38] Ready`,
+          },
+          description: 'Chatify launcher startup log',
+        });
+        items.push({
+          name: 'Chatify_ReadMe.txt',
+          type: 'file',
+          extension: 'txt',
+          size: '1.7 KB',
+          dateModified: '2026-04-19',
+          iconType: 'notepad',
+          targetApp: 'notepad',
+          targetParams: {
+            fileName: 'Chatify_ReadMe.txt',
+            content: `CHATIFY PROJECT FILES\n=====================\n\nChatify.exe\nLaunches the Chatify real-time messaging and video application.\n\nChatifyClient.exe\nOpens the same live Chatify client.\n\nChatifyServer.dll\nShared real-time messaging runtime library.\n\nThese executable shortcuts connect to the deployed Chatify app in your browser.`,
+          },
+          description: 'Overview of the Chatify project files',
+        });
+      }
 
       if (projectMatch.liveUrl) {
         items.push({
@@ -224,9 +380,9 @@ export const ExplorerWindow: React.FC<ExplorerWindowProps> = ({ initialPath = 'C
           extension: 'url',
           size: '1.1 KB',
           dateModified: '2026-04-19',
-          iconType: 'browser_ie',
-          targetApp: 'browser_ie',
-          targetParams: { initialUrl: projectMatch.liveUrl, title: projectMatch.name },
+          iconType: 'browser_opera',
+          targetApp: 'browser',
+          targetParams: { initialUrl: projectMatch.liveUrl, title: projectMatch.name, browserType: 'opera' },
           description: `Direct live production demo link (${projectMatch.liveUrl})`,
         });
       }
@@ -247,6 +403,8 @@ export const ExplorerWindow: React.FC<ExplorerWindowProps> = ({ initialPath = 'C
         size: '1.2 MB',
         dateModified: '2026-04-19',
         iconType: 'computer' as const,
+        targetApp: s.image ? 'image' : undefined,
+        targetParams: s.image ? { imageUrl: s.image, title: s.title } : undefined,
         description: s.caption,
       }));
     }
@@ -295,7 +453,7 @@ export const ExplorerWindow: React.FC<ExplorerWindowProps> = ({ initialPath = 'C
         if (item.targetApp === 'education') {
           openWindow({
             id: 'education-cert',
-            title: 'PICT Academic Degree Certificate & Coursework',
+            title: 'PICT Academic Record & Coursework',
             icon: 'education',
             component: 'education',
             defaultWidth: 780,
@@ -337,25 +495,39 @@ export const ExplorerWindow: React.FC<ExplorerWindowProps> = ({ initialPath = 'C
           defaultWidth: 760,
           defaultHeight: 560,
         });
-      } else if (item.targetApp === 'system') {
-        openWindow({
-          id: 'system-properties',
-          title: 'System - Skills & Windows Experience Index',
-          icon: 'control_panel',
-          component: 'system',
-          defaultWidth: 740,
-          defaultHeight: 540,
-        });
-      } else if (item.targetApp === 'browser_ie') {
+      } else if (item.targetApp === 'browser') {
         openWindow({
           id: 'browser-live-demo',
-          title: (item.targetParams?.title as string) || 'Internet Explorer',
-          icon: 'browser_ie',
+          title: (item.targetParams?.title as string) || 'Live Portfolio',
+          icon: 'browser_opera',
           component: 'browser',
           params: item.targetParams,
           defaultWidth: 840,
           defaultHeight: 560,
         });
+      } else if (item.targetApp === 'image') {
+        openWindow({
+          id: `image-${item.name}`,
+          title: (item.targetParams?.title as string) || item.name,
+          icon: 'computer',
+          component: 'image',
+          params: item.targetParams,
+          defaultWidth: 820,
+          defaultHeight: 600,
+        });
+      } else if (item.targetApp === 'executable') {
+        openWindow({
+          id: 'swiftride-exe',
+          title: item.name,
+          icon: 'computer',
+          component: 'executable',
+          params: item.targetParams,
+          defaultWidth: 1000,
+          defaultHeight: 650,
+        });
+      } else if (item.targetApp === 'external-executable') {
+        const targetUrl = item.targetParams?.url as string;
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
       }
     }
   };
@@ -575,7 +747,7 @@ export const ExplorerWindow: React.FC<ExplorerWindowProps> = ({ initialPath = 'C
                   >
                     <div className="relative mb-1">
                       <AppIconRenderer type={item.iconType} size={40} className="drop-shadow-xs" />
-                      {item.targetApp === 'browser_ie' && (
+                      {item.targetApp === 'browser' && (
                         <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full p-0.5">
                           <ExternalLink size={9} />
                         </div>

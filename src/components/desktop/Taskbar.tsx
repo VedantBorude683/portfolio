@@ -48,13 +48,6 @@ export const Taskbar: React.FC = () => {
       params: { initialUrl: 'https://linkedin.com/in/vedant-borude-2b871a332', browserType: 'opera' },
     },
     {
-      id: 'browser-ie',
-      title: 'Internet Explorer',
-      icon: 'browser_ie' as const,
-      component: 'browser',
-      params: { initialUrl: 'https://uber-eta-eight.vercel.app/', browserType: 'ie' },
-    },
-    {
       id: 'notepad-pinned',
       title: 'Notepad',
       icon: 'notepad' as const,

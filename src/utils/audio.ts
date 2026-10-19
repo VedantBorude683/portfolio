@@ -4,7 +4,7 @@
  */
 
 let audioCtx: AudioContext | null = null;
-let isMuted = true; // Muted by default per user specification
+let isMuted = false;
 
 export const getAudioContext = (): AudioContext | null => {
   if (typeof window === 'undefined') return null;
@@ -32,6 +32,32 @@ export const setMutedState = (muted: boolean): boolean => {
 
 export const toggleMute = (): boolean => {
   return setMutedState(!isMuted);
+};
+
+const playToneSequence = (
+  notes: Array<{ frequency: number; delay: number; duration: number }>,
+  wave: OscillatorType = 'sine',
+  volume = 0.08,
+) => {
+  if (isMuted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const start = ctx.currentTime;
+  notes.forEach(({ frequency, delay, duration }) => {
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const noteStart = start + delay;
+    oscillator.type = wave;
+    oscillator.frequency.setValueAtTime(frequency, noteStart);
+    gain.gain.setValueAtTime(0.0001, noteStart);
+    gain.gain.exponentialRampToValueAtTime(volume, noteStart + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + duration);
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.start(noteStart);
+    oscillator.stop(noteStart + duration + 0.02);
+  });
 };
 
 /**
@@ -83,6 +109,57 @@ export const playStartupChime = () => {
   });
 };
 
+export const playLoginSound = () => {
+  playToneSequence([
+    { frequency: 392, delay: 0, duration: 0.24 },
+    { frequency: 523.25, delay: 0.12, duration: 0.3 },
+    { frequency: 659.25, delay: 0.24, duration: 0.5 },
+  ], 'triangle', 0.1);
+};
+
+export const playShutdownSound = () => {
+  playToneSequence([
+    { frequency: 659.25, delay: 0, duration: 0.22 },
+    { frequency: 523.25, delay: 0.14, duration: 0.22 },
+    { frequency: 392, delay: 0.28, duration: 0.5 },
+  ], 'sine', 0.09);
+};
+
+export const playNotificationSound = () => {
+  playToneSequence([
+    { frequency: 784, delay: 0, duration: 0.1 },
+    { frequency: 1046.5, delay: 0.1, duration: 0.18 },
+  ], 'sine', 0.07);
+};
+
+export const playErrorSound = () => {
+  playToneSequence([
+    { frequency: 220, delay: 0, duration: 0.16 },
+    { frequency: 164.81, delay: 0.12, duration: 0.24 },
+  ], 'square', 0.045);
+};
+
+export const playRestoreSound = () => {
+  playToneSequence([
+    { frequency: 440, delay: 0, duration: 0.08 },
+    { frequency: 659.25, delay: 0.07, duration: 0.14 },
+  ], 'triangle', 0.065);
+};
+
+export const playDeviceConnectSound = () => {
+  playToneSequence([
+    { frequency: 523.25, delay: 0, duration: 0.1 },
+    { frequency: 783.99, delay: 0.09, duration: 0.18 },
+  ], 'triangle', 0.07);
+};
+
+export const playDeviceDisconnectSound = () => {
+  playToneSequence([
+    { frequency: 783.99, delay: 0, duration: 0.1 },
+    { frequency: 523.25, delay: 0.09, duration: 0.18 },
+  ], 'triangle', 0.07);
+};
+
 /**
  * Click / Navigation tick sound
  */
@@ -107,6 +184,10 @@ export const playClickSound = () => {
 
   osc.start(now);
   osc.stop(now + 0.05);
+};
+
+export const playMenuSound = () => {
+  playToneSequence([{ frequency: 740, delay: 0, duration: 0.045 }], 'sine', 0.045);
 };
 
 /**

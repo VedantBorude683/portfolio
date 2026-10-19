@@ -17,7 +17,6 @@ export const EducationWindow: React.FC = () => {
     { id: 'location', field: 'Location', value: education.location },
     { id: 'period', field: 'Valid Period', value: education.period },
     { id: 'cgpa', field: 'Cumulative GPA (CGPA)', value: `${education.cgpa} (Distinction Honors)` },
-    { id: 'percentile', field: 'Scholastic Percentile', value: 'Top 3% of Computer Engineering Department' },
     { id: 'coursework', field: 'Core Coursework', value: education.coursework.join('; ') },
     { id: 'highlights', field: 'Scholastic Honors', value: education.highlights.join('; ') },
   ];
@@ -56,7 +55,7 @@ export const EducationWindow: React.FC = () => {
               : 'bg-white/40 border-transparent text-gray-600 hover:bg-white/80'
           }`}
         >
-          Certification Path
+          Academic Path
         </button>
       </div>
 
@@ -65,15 +64,15 @@ export const EducationWindow: React.FC = () => {
         {/* ================= GENERAL TAB ================= */}
         {activeTab === 'general' && (
           <div className="space-y-4 max-w-xl mx-auto">
-            {/* Certificate Header Banner */}
+            {/* Academic status header */}
             <div className="flex items-start space-x-3.5 border border-[#c4d7ec] bg-[#f4f8fd] p-3 rounded">
               <AppIconRenderer type="education" size={44} className="shrink-0" />
               <div className="space-y-1">
                 <div className="font-bold text-sm text-[#003399]">
-                  Certificate Information
+                  Academic Information
                 </div>
                 <div className="text-xs text-gray-700 leading-relaxed">
-                  This academic certificate confirms that <strong>Vedant Borude</strong> is actively enrolled in good standing in the <strong>{education.degree}</strong> program at <strong>{education.institution}</strong>.
+                  This record confirms that <strong>Vedant Borude</strong> is actively enrolled in good standing in the <strong>{education.degree}</strong> program at <strong>{education.institution}</strong>.
                 </div>
               </div>
             </div>
@@ -157,10 +156,10 @@ export const EducationWindow: React.FC = () => {
           </div>
         )}
 
-        {/* ================= CERTIFICATION PATH TAB ================= */}
+        {/* ================= ACADEMIC PATH TAB ================= */}
         {activeTab === 'path' && (
           <div className="space-y-4 max-w-lg mx-auto">
-            <div className="text-[11px] text-gray-600 font-medium">Certification path:</div>
+            <div className="text-[11px] text-gray-600 font-medium">Academic path:</div>
 
             {/* Hierarchical Tree */}
             <div className="border border-[#94a3b8] bg-white rounded p-3 space-y-2 text-xs shadow-inner">
@@ -178,12 +177,12 @@ export const EducationWindow: React.FC = () => {
               </div>
             </div>
 
-            {/* Certificate Status Box */}
+            {/* Academic status box */}
             <div className="border border-[#c4d7ec] bg-[#f4f8fd] p-3 rounded space-y-1">
-              <div className="text-xs font-bold text-gray-800">Certificate status:</div>
+              <div className="text-xs font-bold text-gray-800">Enrollment status:</div>
               <div className="text-xs text-emerald-800 flex items-center space-x-1.5 font-medium">
                 <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
-                <span>This certificate is OK and verified under student ID VEDANT-PICT-2024.</span>
+                <span>Active undergraduate enrollment verified under student ID VEDANT-PICT-2024.</span>
               </div>
             </div>
           </div>
@@ -193,7 +192,7 @@ export const EducationWindow: React.FC = () => {
       {/* 3. DIALOG FOOTER WITH AUTHENTIC BUTTONS */}
       <div className="bg-[#f0f0f0] border-t border-[#dfdfdf] px-4 py-2.5 flex items-center justify-between shrink-0">
         <div className="text-[11px] text-gray-500">
-          Academic Accreditation: NAAC 'A+' Grade
+          Undergraduate academic record
         </div>
 
         <div className="flex items-center space-x-2">

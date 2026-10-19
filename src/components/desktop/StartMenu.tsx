@@ -49,14 +49,6 @@ export const StartMenu: React.FC = () => {
       params: { initialUrl: 'https://linkedin.com/in/vedant-borude-2b871a332', browserType: 'opera' },
     },
     {
-      id: 'browser-ie',
-      title: 'Internet Explorer',
-      sub: 'Browse Live Web Apps & Demos',
-      icon: 'browser_ie',
-      component: 'browser',
-      params: { initialUrl: 'https://uber-eta-eight.vercel.app/', browserType: 'ie' },
-    },
-    {
       id: 'notepad-readme',
       title: 'Notepad',
       sub: 'Read About Me & Specs',
@@ -72,13 +64,6 @@ export const StartMenu: React.FC = () => {
       component: 'cmd',
     },
     {
-      id: 'system-properties',
-      title: 'System & Experience Index',
-      sub: 'Technical Skills (7.9 WEI)',
-      icon: 'control_panel',
-      component: 'system',
-    },
-    {
       id: 'mail-app',
       title: 'Windows Live Mail',
       sub: 'Contact & Hire Vedant Borude',
@@ -88,7 +73,7 @@ export const StartMenu: React.FC = () => {
     {
       id: 'education-cert',
       title: 'PICT Academic Degree & Honors',
-      sub: 'CGPA 9.40 / 10.00 Certificate',
+      sub: 'CGPA 9.40 / 10.00 • Undergraduate',
       icon: 'education',
       component: 'education',
     },

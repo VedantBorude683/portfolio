@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { PORTFOLIO_DATA, RecycleItem } from '../data';
-import { toggleMute, getMutedState, playClickSound, playOpenSound, playTrashSound } from '../utils/audio';
+import { toggleMute, getMutedState, playClickSound, playOpenSound, playRestoreSound, playTrashSound } from '../utils/audio';
 
 export type AppIconType = 
   | 'computer' 
@@ -216,6 +216,7 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
   },
 
   restoreWindow: (id: string) => {
+    playRestoreSound();
     const { windows, highestZIndex } = get();
     if (!windows[id]) return;
 

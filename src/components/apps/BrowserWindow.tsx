@@ -19,7 +19,13 @@ export const BrowserWindow: React.FC<BrowserWindowProps> = ({
   const [inputUrl, setInputUrl] = useState(initialUrl);
   const [isLoading, setIsLoading] = useState(false);
   const [tabs, setTabs] = useState([
-    { id: '1', title: 'SwiftRide - Live Portfolio Demo', url: initialUrl },
+    {
+      id: '1',
+      title: initialUrl.includes('chatify-one-lyart')
+        ? 'Chatify - Real-Time Messaging & Video App'
+        : 'SwiftRide - Live Portfolio Demo',
+      url: initialUrl,
+    },
   ]);
   const [activeTabId, setActiveTabId] = useState('1');
 
@@ -41,7 +47,9 @@ export const BrowserWindow: React.FC<BrowserWindowProps> = ({
           ? {
               ...t,
               url: newUrl,
-              title: newUrl.includes('uber') || newUrl.includes('vercel')
+              title: newUrl.includes('chatify-one-lyart')
+                ? 'Chatify - Real-Time Messaging & Video App'
+                : newUrl.includes('uber') || newUrl.includes('vercel')
                 ? 'SwiftRide - Live Portfolio Demo'
                 : newUrl.includes('linkedin')
                 ? 'Vedant Borude | LinkedIn'
@@ -70,6 +78,7 @@ export const BrowserWindow: React.FC<BrowserWindowProps> = ({
   const isLinkedIn = url.toLowerCase().includes('linkedin');
   const isGitHub = url.toLowerCase().includes('github');
   const isDemo = url.toLowerCase().includes('uber') || url.includes('vercel') || url.includes('swiftride');
+  const isChatify = url.toLowerCase().includes('chatify-one-lyart');
 
   return (
     <div className="flex-1 flex flex-col bg-[#f0f0f0] select-none h-full font-sans text-xs">
@@ -190,21 +199,21 @@ export const BrowserWindow: React.FC<BrowserWindowProps> = ({
           </div>
         )}
 
-        {/* 4A: LIVE PORTFOLIO & SWIFTRIDE UBER DEMO */}
+        {/* 4A: LIVE PORTFOLIO & PROJECT DEMO */}
         {isDemo && (
           <div className="w-full h-full flex flex-col bg-[#ffffff] text-gray-800 font-sans">
-            {/* Internet Explorer Information / Security Bar */}
+            {/* Live deployment information bar */}
             <div className="bg-[#ffffe1] border-b border-[#e6db55] px-3 py-1.5 flex items-center justify-between text-xs text-[#5c5310] shrink-0 shadow-xs">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px]">
                   i
                 </div>
                 <span>
-                  Showing live portfolio & project deployment: <strong>https://uber-eta-eight.vercel.app/</strong>
+                  Showing live project deployment: <strong>{url}</strong>
                 </span>
               </div>
               <a
-                href="https://uber-eta-eight.vercel.app/"
+                href={url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="aero-button px-2.5 py-0.5 rounded text-xs text-gray-900 font-medium flex items-center space-x-1 cursor-pointer shrink-0 ml-2"
@@ -214,15 +223,37 @@ export const BrowserWindow: React.FC<BrowserWindowProps> = ({
               </a>
             </div>
 
-            {/* Embedded Live Frame */}
-            <div className="flex-1 relative bg-white min-h-[380px]">
-              <iframe
-                src="https://uber-eta-eight.vercel.app/"
-                title="Vedant Borude Live Portfolio & SwiftRide Demo"
-                className="w-full h-full border-none"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-              />
-            </div>
+            {isChatify ? (
+              <div className="flex-1 min-h-[380px] bg-gradient-to-br from-slate-50 to-sky-100 flex items-center justify-center p-6">
+                <div className="max-w-md text-center bg-white border border-sky-200 rounded-lg shadow-md p-6">
+                  <Globe size={42} className="mx-auto mb-3 text-sky-600" />
+                  <h2 className="text-base font-semibold text-slate-800 mb-2">
+                    Chatify is ready to open
+                  </h2>
+                  <p className="text-xs leading-5 text-slate-600 mb-4">
+                    Chatify does not allow other websites to embed its deployment in an iframe.
+                    Open the live app in a browser tab instead.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
+                    className="aero-button px-4 py-2 rounded text-xs text-blue-900 font-semibold inline-flex items-center space-x-2 cursor-pointer"
+                  >
+                    <span>Open Chatify</span>
+                    <ExternalLink size={13} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 relative bg-white min-h-[380px]">
+                <iframe
+                  src={url}
+                  title="Vedant Borude Live Portfolio & SwiftRide Demo"
+                  className="w-full h-full border-none"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -352,7 +383,7 @@ export const BrowserWindow: React.FC<BrowserWindowProps> = ({
         {/* 4D: FALLBACK SEARCH VIEW */}
         {!isLinkedIn && !isGitHub && !isDemo && (
           <div className="p-8 text-center max-w-lg mx-auto">
-            <h1 className="text-lg font-bold text-gray-800 mb-2">Internet Explorer</h1>
+            <h1 className="text-lg font-bold text-gray-800 mb-2">Web Browser</h1>
             <p className="text-xs text-gray-600 mb-4">
               Select a favorite to explore Vedant's live portfolio and project deployments.
             </p>

@@ -37,7 +37,7 @@ export const VIRTUAL_FS: Record<string, string[]> = {
     'System_Design_Checklist.txt',
   ],
   'C:\\Users\\Administrator\\Education': [
-    'PICT_Degree_Certificate.doc',
+    '    PICT_Academic_Record.doc',
     'Coursework_Syllabus.txt',
     'Academic_Transcript_9.40_CGPA.txt',
   ],
@@ -156,7 +156,7 @@ FEATURED PROJECTS - VEDANT BORUDE
 ======================================================================
 [1] TETHER - Microservice Impact Analyzer
     Event-driven platform detecting breaking API contract changes in PRs.
-    Stack: Java, Spring Boot, Apache Kafka, MongoDB, DeepSeek LLM, Chrome Ext.
+    Stack: Java, Spring Boot, Apache Kafka, MongoDB, semantic analysis, Chrome Ext.
 
 [2] CHATIFY - Real-Time Messaging & Video App
     Instant messaging with WebRTC video & self-destructing Whisper Mode.
@@ -281,7 +281,7 @@ C:.
 │       Engineering_Notes.txt
 │       System_Design_Checklist.txt
 ├───Education
-│       PICT_Degree_Certificate.doc
+│       PICT_Academic_Record.doc
 │       Coursework_Syllabus.txt
 │       Academic_Transcript_9.40_CGPA.txt
 └───Projects

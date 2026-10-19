@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Power, RotateCcw } from 'lucide-react';
 import { useWindowStore } from '../../store/windowStore';
+import { playShutdownSound, playStartupChime } from '../../utils/audio';
 
 interface PowerScreenProps {
   onPowerOn: () => void;
@@ -12,12 +13,15 @@ export const PowerScreen: React.FC<PowerScreenProps> = ({ onPowerOn }) => {
 
   useEffect(() => {
     if (osPowerState === 'restart') {
+      playShutdownSound();
       const t = setTimeout(() => {
         setOsPowerState('running');
+        playStartupChime();
         onPowerOn();
       }, 1500);
       return () => clearTimeout(t);
     } else if (osPowerState === 'shutdown') {
+      playShutdownSound();
       const t = setTimeout(() => {
         setStage('safe_to_turn_off');
       }, 1800);

@@ -1,34 +1,71 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX, FastForward, ArrowRight } from 'lucide-react';
-import { playStartupChime } from '../../utils/audio';
-import { useWindowStore } from '../../store/windowStore';
-import { UserAvatarIcon } from '../common/OSIcons';
+import React, { useState, useEffect } from 'react';
+import { playLoginSound, playStartupChime } from '../../utils/audio';
 
 interface BootSequenceProps {
   onComplete: () => void;
 }
 
 type BootPhase = 
-  | 'bootloader'        // Stage 1: Black screen, particles emerging and swirling
-  | 'starting_windows'  // Stage 2: Windows logo converged with "Starting Windows"
-  | 'welcome_loading'   // Stage 3: Transition to Aero blue screen with loading ring
-  | 'login'             // Stage 4: Windows 7 Administrator Login tile & password field
-  | 'desktop_loading';  // Stage 5: "Welcome" -> "Preparing your desktop..." -> Desktop
+  | 'bios'              // Stage 1: BIOS and recovery console startup
+  | 'bootloader'        // Stage 2: Black screen, particles emerging and swirling
+  | 'starting_windows'  // Stage 3: Windows logo converged with "Starting Windows"
+  | 'welcome_loading'   // Stage 4: Transition to Aero blue screen with loading ring
+  | 'login'             // Stage 5: Windows 7 Administrator Login tile
+  | 'desktop_loading';  // Stage 6: "Welcome" -> "Preparing your desktop..." -> Desktop
+
+const biosLines = [
+  '[ 0.000000] BIOS: ROM Revision 4.1.2',
+  '[ 0.012451] CPU: Intel 8086 @ 4.77MHz Detected',
+  '[ 0.150992] MEMORY: 640KB Conventional Memory OK',
+  '[ 0.320011] DMA: Controller Initialized',
+  '[ 0.450122] IRQ: Standard Table Loaded',
+  '[ 0.609887] KEYBOARD: PS/2 Controller Active',
+  '[ 0.823344] DISK: Drive C: Found (20MB HDD)',
+  '[ 1.102345] BOOT: Loading Sector 0 from Drive C...',
+  '[ 1.560293] KERNEL: Initializing VFS...',
+  '[ 2.100456] KERNEL: Mounting root filesystem...',
+  '[ 2.450912] DRIVER: Loading VGA.SYS... OK',
+  '[ 3.120485] DRIVER: Loading NET.SYS... FAILED',
+  '[ 3.890332] SYSTEM: Starting Legacy Shell v1.0.4',
+  '[ 4.500221] USER: root logged in...',
+  'C:\\> sys_check --verbose',
+  'Scanning local segments...',
+  'Sector 0xFF12: [BAD CLUSTER]',
+  'Sector 0xFF13: [CLEAN]',
+  'Sector 0xFF14: [CLEAN]',
+  'Sector 0xFF15: [CLEAN]',
+  'Recovery in progress... 100%',
+  'C:\\>',
+];
 
 export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
-  const [phase, setPhase] = useState<BootPhase>('bootloader');
-  const [passwordInput, setPasswordInput] = useState('');
+  const [phase, setPhase] = useState<BootPhase>('bios');
+  const [biosLineCount, setBiosLineCount] = useState(1);
   const [welcomeText, setWelcomeText] = useState('Welcome');
-  const passwordInputRef = useRef<HTMLInputElement | null>(null);
-
-  const { isSoundMuted, toggleSound } = useWindowStore();
 
   const finishBoot = () => {
     playStartupChime();
     onComplete();
   };
 
-  // Stage 1 (Bootloader particles) -> Stage 2 ("Starting Windows") after 2.4s
+  useEffect(() => {
+    if (phase !== 'bios') return;
+
+    const timer = setInterval(() => {
+      setBiosLineCount((count) => {
+        if (count >= biosLines.length) {
+          clearInterval(timer);
+          setPhase('bootloader');
+          return count;
+        }
+        return count + 1;
+      });
+    }, 210);
+
+    return () => clearInterval(timer);
+  }, [phase]);
+
+  // Stage 2 (Bootloader particles) -> Stage 3 ("Starting Windows") after 2.4s
   useEffect(() => {
     if (phase === 'bootloader') {
       const timer = setTimeout(() => {
@@ -38,7 +75,7 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     }
   }, [phase]);
 
-  // Stage 2 ("Starting Windows") -> Stage 3 (Welcome Screen Transition) after 2.8s
+  // Stage 3 ("Starting Windows") -> Stage 4 (Welcome Screen Transition) after 2.8s
   useEffect(() => {
     if (phase === 'starting_windows') {
       const timer = setTimeout(() => {
@@ -48,7 +85,7 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     }
   }, [phase]);
 
-  // Stage 3 (Welcome Loading) -> Stage 4 (Administrator Login) after 1.8s
+  // Stage 4 (Welcome Loading) -> Stage 5 (Administrator Login) after 1.8s
   useEffect(() => {
     if (phase === 'welcome_loading') {
       const timer = setTimeout(() => {
@@ -58,17 +95,15 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     }
   }, [phase]);
 
-  // Auto-focus password input when login stage activates
   useEffect(() => {
     if (phase === 'login') {
-      const timer = setTimeout(() => {
-        passwordInputRef.current?.focus();
-      }, 200);
+      playLoginSound();
+      const timer = setTimeout(() => handleLoginSubmit(), 1100);
       return () => clearTimeout(timer);
     }
   }, [phase]);
 
-  // Handle Login submission: Stage 4 -> Stage 5 ("Welcome" -> "Preparing your desktop...")
+  // Handle Login submission: Stage 5 -> Stage 6 ("Welcome" -> "Preparing your desktop...")
   const handleLoginSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (phase !== 'login') return;
@@ -88,44 +123,24 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     return () => clearTimeout(t1);
   };
 
-  // Keyboard skip listener: Escape key skips intro
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        finishBoot();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   return (
     <div className="fixed inset-0 z-[999999] bg-black text-white select-none overflow-hidden flex flex-col font-sans">
-      {/* Top right quick controls: Sound toggle & Skip Intro button */}
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-50 flex items-center space-x-2">
-        <button
-          onClick={toggleSound}
-          className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-black/40 hover:bg-black/60 text-xs text-white backdrop-blur border border-white/20 transition-all cursor-pointer shadow-md"
-          title={isSoundMuted ? 'Unmute Audio Chime' : 'Mute Audio'}
-          aria-label={isSoundMuted ? 'Unmute Audio' : 'Mute Audio'}
-        >
-          {isSoundMuted ? <VolumeX size={13} className="text-red-300" /> : <Volume2 size={13} className="text-emerald-400" />}
-          <span className="hidden sm:inline">{isSoundMuted ? 'Sound: Muted' : 'Sound: Active'}</span>
-        </button>
-
-        <button
-          onClick={finishBoot}
-          className="flex items-center space-x-1.5 px-3 py-1 rounded bg-blue-600/90 hover:bg-blue-500 text-xs text-white font-medium backdrop-blur border border-blue-400/50 shadow-lg transition-all cursor-pointer active:scale-95"
-          aria-label="Skip Boot Sequence"
-          title="Skip straight to desktop (or press Esc)"
-        >
-          <span>Skip Intro</span>
-          <FastForward size={13} />
-        </button>
-      </div>
+      {/* =========================================================================
+          STAGE 1: BIOS-STYLE STARTUP CONSOLE
+          ========================================================================= */}
+      {phase === 'bios' && (
+        <div className="flex-1 overflow-hidden bg-black px-5 py-4 font-mono text-[10px] leading-[1.55] text-[#e8e8e8] sm:px-12 sm:py-6 sm:text-xs">
+          {biosLines.slice(0, biosLineCount).map((line, index) => (
+            <div key={`${line}-${index}`} className="whitespace-pre">
+              {line}
+            </div>
+          ))}
+          <span className="inline-block h-3 w-2 animate-pulse bg-[#e8e8e8] align-middle" />
+        </div>
+      )}
 
       {/* =========================================================================
-          STAGE 1 & STAGE 2: BOOTLOADER PARTICLES & "STARTING WINDOWS"
+          STAGE 2 & STAGE 3: BOOTLOADER PARTICLES & "STARTING WINDOWS"
           ========================================================================= */}
       {(phase === 'bootloader' || phase === 'starting_windows') && (
         <div className="flex-1 flex flex-col items-center justify-center relative bg-black transition-opacity duration-700">
@@ -190,9 +205,6 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
             )}
           </div>
 
-          <div className="absolute bottom-6 text-center text-[11px] text-gray-600 font-mono">
-            Vedant Borude Simulation &bull; Press [Esc] to skip
-          </div>
         </div>
       )}
 
@@ -220,7 +232,11 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
             {/* User Avatar Tile (Framed with authentic Windows 7 glass border) */}
             <div className="mb-4 relative group">
               <div className="p-1 rounded-lg bg-gradient-to-b from-white/80 via-white/40 to-white/60 shadow-2xl backdrop-blur-sm border border-white/70">
-                <UserAvatarIcon size={96} className="rounded border border-black/20" />
+                <img
+                  src="/images/profile/vedant-borude.jpg"
+                  alt="Vedant Borude"
+                  className="h-24 w-24 rounded border border-black/20 object-cover"
+                />
               </div>
             </div>
 
@@ -242,35 +258,12 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
               </div>
             )}
 
-            {/* STAGE 4: ADMINISTRATOR LOGIN FORM */}
+            {/* STAGE 4: DIRECT ADMINISTRATOR LOGIN */}
             {phase === 'login' && (
-              <form
-                onSubmit={handleLoginSubmit}
-                className="flex flex-col items-center space-y-3 w-full animate-in fade-in duration-400"
-              >
-                <div className="flex items-center space-x-1.5 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded border border-white/50 shadow-inner w-60">
-                  <input
-                    ref={passwordInputRef}
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    placeholder="Password"
-                    aria-label="Administrator Password"
-                    className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-sky-200/70 placeholder:text-xs"
-                  />
-                  <button
-                    type="submit"
-                    className="w-7 h-7 rounded-full bg-gradient-to-b from-sky-400 via-blue-600 to-blue-700 hover:from-sky-300 hover:to-blue-500 text-white flex items-center justify-center text-xs shadow-md border border-white/60 transition-transform active:scale-95 cursor-pointer shrink-0"
-                    title="Log on (or press Enter)"
-                    aria-label="Log on"
-                  >
-                    <ArrowRight size={13} strokeWidth={2.5} />
-                  </button>
-                </div>
-                <div className="text-[11px] text-sky-200/90 drop-shadow-sm font-normal">
-                  Click <strong className="text-white font-bold">➔</strong> or press <strong className="text-white font-bold">Enter</strong> to log on
-                </div>
-              </form>
+              <div className="flex flex-col items-center space-y-3 animate-in fade-in duration-400">
+                <div className="text-sm text-sky-100 drop-shadow-md">Signing in automatically...</div>
+                <div className="h-7 w-7 rounded-full border-2 border-sky-300 border-t-transparent animate-spin" />
+              </div>
             )}
 
             {/* STAGE 5: DESKTOP PREPARATION ANIMATION */}

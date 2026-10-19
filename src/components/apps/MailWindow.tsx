@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Send, Mail, Inbox, CheckCircle2, Copy, ExternalLink, Paperclip, User, MessageSquare, BookOpen } from 'lucide-react';
 import { PORTFOLIO_DATA } from '../../data';
 import { AppIconRenderer } from '../common/OSIcons';
+import { playNotificationSound } from '../../utils/audio';
 
 export const MailWindow: React.FC = () => {
   const [senderName, setSenderName] = useState('');
@@ -20,6 +21,7 @@ export const MailWindow: React.FC = () => {
     )}&body=${encodeURIComponent(`From: ${senderName} (${senderEmail})\n\n${body}`)}`;
 
     window.location.href = mailtoUrl;
+    playNotificationSound();
     setSentStatus(true);
     setTimeout(() => setSentStatus(false), 5000);
   };

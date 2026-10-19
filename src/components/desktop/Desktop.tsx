@@ -17,6 +17,8 @@ import { PdfViewerWindow } from '../apps/PdfViewerWindow';
 import { EducationWindow } from '../apps/EducationWindow';
 import { AchievementsWindow } from '../apps/AchievementsWindow';
 import { MailWindow } from '../apps/MailWindow';
+import { ImageViewerWindow } from '../apps/ImageViewerWindow';
+import { ExecutableWindow } from '../apps/ExecutableWindow';
 
 interface DesktopIconDef {
   id: string;
@@ -115,15 +117,6 @@ export const Desktop: React.FC = () => {
       icon: 'browser_opera',
       component: 'browser',
       params: { initialUrl: 'https://linkedin.com/in/vedant-borude-2b871a332', browserType: 'opera' },
-      defaultWidth: 840,
-      defaultHeight: 560,
-    },
-    {
-      id: 'browser-ie-app',
-      name: 'Internet Explorer',
-      icon: 'browser_ie',
-      component: 'browser',
-      params: { initialUrl: 'https://uber-eta-eight.vercel.app/', browserType: 'ie' },
       defaultWidth: 840,
       defaultHeight: 560,
     },
@@ -260,6 +253,20 @@ export const Desktop: React.FC = () => {
         return <AchievementsWindow />;
       case 'mail':
         return <MailWindow />;
+      case 'image':
+        return (
+          <ImageViewerWindow
+            imageUrl={w.params?.imageUrl as string}
+            title={w.params?.title as string}
+          />
+        );
+      case 'executable':
+        return (
+          <ExecutableWindow
+            title={w.title}
+            url={w.params?.url as string}
+          />
+        );
       default:
         return <div className="p-4 text-xs">Application view</div>;
     }
