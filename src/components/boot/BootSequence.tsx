@@ -97,7 +97,6 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
 
   useEffect(() => {
     if (phase === 'login') {
-      playLoginSound();
       const timer = setTimeout(() => handleLoginSubmit(), 1100);
       return () => clearTimeout(timer);
     }
@@ -108,6 +107,7 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     if (e) e.preventDefault();
     if (phase !== 'login') return;
 
+    playLoginSound();
     setPhase('desktop_loading');
     setWelcomeText('Welcome');
 
