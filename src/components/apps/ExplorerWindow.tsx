@@ -212,39 +212,6 @@ export const ExplorerWindow: React.FC<ExplorerWindowProps> = ({ initialPath = 'C
 
       if (projectMatch.id === 'swiftride' && projectMatch.liveUrl) {
         items.push({
-          name: 'Uber.exe',
-          type: 'file',
-          extension: 'exe',
-          size: '3.4 MB',
-          dateModified: '2026-04-19',
-          iconType: 'computer',
-          targetApp: 'external-executable',
-          targetParams: { url: 'https://www.uber.com/' },
-          description: 'Open the official Uber website',
-        });
-        items.push({
-          name: 'UberDriver.exe',
-          type: 'file',
-          extension: 'exe',
-          size: '2.1 MB',
-          dateModified: '2026-04-19',
-          iconType: 'computer',
-          targetApp: 'external-executable',
-          targetParams: { url: 'https://www.uber.com/drive/' },
-          description: 'Open the official Uber driver website',
-        });
-        items.push({
-          name: 'UberEats.exe',
-          type: 'file',
-          extension: 'exe',
-          size: '2.6 MB',
-          dateModified: '2026-04-19',
-          iconType: 'computer',
-          targetApp: 'external-executable',
-          targetParams: { url: 'https://www.ubereats.com/' },
-          description: 'Open the official Uber Eats website',
-        });
-        items.push({
           name: 'UberClient.dll',
           type: 'file',
           extension: 'dll',

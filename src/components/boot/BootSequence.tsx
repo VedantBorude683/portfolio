@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { playLoginSound, playStartupChime } from '../../utils/audio';
+import { playLoginSound, playStartupChime, unlockAudioContext, playLoadingSound, stopLoadingSound } from '../../utils/audio';
 
 interface BootSequenceProps {
   onComplete: () => void;
@@ -43,8 +43,12 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
   const [biosLineCount, setBiosLineCount] = useState(1);
   const [welcomeText, setWelcomeText] = useState('Welcome');
 
+  // Unlock AudioContext on first user gesture (fixes Chrome autoplay policy)
+  useEffect(() => {
+    unlockAudioContext();
+  }, []);
+
   const finishBoot = () => {
-    playStartupChime();
     onComplete();
   };
 
@@ -72,6 +76,13 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
         setPhase('starting_windows');
       }, 2400);
       return () => clearTimeout(timer);
+    }
+  }, [phase]);
+
+  // Start ambient loading sound when "Starting Windows" appears
+  useEffect(() => {
+    if (phase === 'starting_windows') {
+      playLoadingSound();
     }
   }, [phase]);
 
@@ -107,7 +118,10 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     if (e) e.preventDefault();
     if (phase !== 'login') return;
 
+    // Stop loading sound and play the startup chime NOW (right after login)
+    stopLoadingSound();
     playLoginSound();
+    playStartupChime();
     setPhase('desktop_loading');
     setWelcomeText('Welcome');
 

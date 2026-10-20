@@ -20,6 +20,25 @@ export const getAudioContext = (): AudioContext | null => {
   return audioCtx;
 };
 
+/**
+ * Unlock the AudioContext on the very first user gesture (mousemove, click, keydown, touchstart).
+ * Call this as early as possible during the boot sequence so sounds fire on time.
+ */
+export const unlockAudioContext = (): void => {
+  const unlock = () => {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    ['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach((evt) => {
+      window.removeEventListener(evt, unlock);
+    });
+  };
+  ['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach((evt) => {
+    window.addEventListener(evt, unlock, { once: true, passive: true });
+  });
+};
+
 export const getMutedState = (): boolean => isMuted;
 
 export const setMutedState = (muted: boolean): boolean => {
@@ -252,4 +271,63 @@ export const playTrashSound = () => {
 
   noise.start(now);
   noise.stop(now + 0.16);
+};
+
+/**
+ * Subtle ambient loading pulse sound — plays soft rhythmic "heartbeat" tones
+ * during the Windows boot/loading phases.
+ */
+let _loadingPulseTimeout: ReturnType<typeof setTimeout> | null = null;
+let _loadingActive = false;
+
+export const playLoadingSound = (): void => {
+  if (isMuted) return;
+  _loadingActive = true;
+
+  const pulse = () => {
+    if (!_loadingActive) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+
+    // Low warm rumble (bass pulse)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(60, now);
+    gain1.gain.setValueAtTime(0.0001, now);
+    gain1.gain.linearRampToValueAtTime(0.07, now + 0.12);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.65);
+
+    // Higher shimmer tone (airy glint)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(520, now + 0.05);
+    osc2.frequency.exponentialRampToValueAtTime(420, now + 0.4);
+    gain2.gain.setValueAtTime(0.0001, now + 0.05);
+    gain2.gain.linearRampToValueAtTime(0.04, now + 0.15);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.05);
+    osc2.stop(now + 0.5);
+
+    _loadingPulseTimeout = setTimeout(pulse, 900);
+  };
+
+  pulse();
+};
+
+export const stopLoadingSound = (): void => {
+  _loadingActive = false;
+  if (_loadingPulseTimeout !== null) {
+    clearTimeout(_loadingPulseTimeout);
+    _loadingPulseTimeout = null;
+  }
 };

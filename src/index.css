@@ -37,13 +37,11 @@
 
 /* Aero Glass styling */
 .aero-glass {
-  background: linear-gradient(
-    180deg,
-    rgba(215, 235, 255, 0.45) 0%,
-    rgba(170, 205, 245, 0.3) 25%,
-    rgba(140, 185, 235, 0.25) 50%,
-    rgba(160, 200, 245, 0.35) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(215, 235, 255, 0.45) 0%,
+      rgba(170, 205, 245, 0.3) 25%,
+      rgba(140, 185, 235, 0.25) 50%,
+      rgba(160, 200, 245, 0.35) 100%);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.55);
@@ -56,15 +54,13 @@
 }
 
 .aero-taskbar {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(220, 238, 255, 0.25) 8%,
-    rgba(125, 175, 225, 0.3) 15%,
-    rgba(70, 130, 195, 0.45) 50%,
-    rgba(30, 80, 150, 0.55) 51%,
-    rgba(50, 105, 175, 0.5) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(220, 238, 255, 0.25) 8%,
+      rgba(125, 175, 225, 0.3) 15%,
+      rgba(70, 130, 195, 0.45) 50%,
+      rgba(30, 80, 150, 0.55) 51%,
+      rgba(50, 105, 175, 0.5) 100%);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-top: 1px solid rgba(255, 255, 255, 0.65);
@@ -72,22 +68,18 @@
 }
 
 .aero-titlebar {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.55) 0%,
-    rgba(230, 245, 255, 0.3) 40%,
-    rgba(165, 205, 245, 0.25) 45%,
-    rgba(135, 185, 235, 0.35) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(230, 245, 255, 0.3) 40%,
+      rgba(165, 205, 245, 0.25) 45%,
+      rgba(135, 185, 235, 0.35) 100%);
 }
 
 .aero-titlebar-inactive {
-  background: linear-gradient(
-    180deg,
-    rgba(240, 240, 240, 0.4) 0%,
-    rgba(220, 220, 220, 0.2) 40%,
-    rgba(190, 195, 200, 0.2) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(240, 240, 240, 0.4) 0%,
+      rgba(220, 220, 220, 0.2) 40%,
+      rgba(190, 195, 200, 0.2) 100%);
 }
 
 .aero-button {
@@ -110,13 +102,11 @@
 
 /* Taskbar running item button */
 .taskbar-item-active {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(210, 235, 255, 0.35) 45%,
-    rgba(140, 195, 250, 0.4) 50%,
-    rgba(190, 225, 255, 0.5) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(210, 235, 255, 0.35) 45%,
+      rgba(140, 195, 250, 0.4) 50%,
+      rgba(190, 225, 255, 0.5) 100%);
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow:
     inset 0 0 8px rgba(255, 255, 255, 0.8),
@@ -125,12 +115,10 @@
 
 /* Start Menu Aero Styling */
 .start-menu-glass {
-  background: linear-gradient(
-    180deg,
-    rgba(215, 235, 255, 0.88) 0%,
-    rgba(170, 205, 245, 0.82) 40%,
-    rgba(130, 180, 235, 0.85) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(215, 235, 255, 0.88) 0%,
+      rgba(170, 205, 245, 0.82) 40%,
+      rgba(130, 180, 235, 0.85) 100%);
   backdrop-filter: blur(25px) saturate(180%);
   -webkit-backdrop-filter: blur(25px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.7);
@@ -141,9 +129,12 @@
 
 /* Glowing Start Orb Pulse */
 @keyframes orb-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     filter: drop-shadow(0 0 4px rgba(66, 153, 225, 0.6));
   }
+
   50% {
     filter: drop-shadow(0 0 12px rgba(99, 179, 237, 0.9));
   }
