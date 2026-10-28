@@ -1,17 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { playLoginSound, playStartupChime, unlockAudioContext, playLoadingSound, stopLoadingSound } from '../../utils/audio';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  playLoginSound,
+  playStartupChime,
+  playBootLoadingSound,
+  unlockAudioContext,
+  resumeAudio,
+} from '../../utils/audio';
 
 interface BootSequenceProps {
   onComplete: () => void;
 }
 
-type BootPhase = 
-  | 'bios'              // Stage 1: BIOS and recovery console startup
-  | 'bootloader'        // Stage 2: Black screen, particles emerging and swirling
-  | 'starting_windows'  // Stage 3: Windows logo converged with "Starting Windows"
-  | 'welcome_loading'   // Stage 4: Transition to Aero blue screen with loading ring
-  | 'login'             // Stage 5: Windows 7 Administrator Login tile
-  | 'desktop_loading';  // Stage 6: "Welcome" -> "Preparing your desktop..." -> Desktop
+type BootPhase =
+  | 'bios'             // Stage 1: BIOS and recovery console startup
+  | 'bootloader'       // Stage 2: Black screen, particles emerging and swirling
+  | 'starting_windows' // Stage 3: Windows logo converged with "Starting Windows"
+  | 'welcome_loading'  // Stage 4: Transition to Aero blue screen with loading ring
+  | 'login'            // Stage 5: Windows 7 Administrator Login tile
+  | 'desktop_loading'; // Stage 6: "Welcome" -> "Preparing your desktop..." -> Desktop
 
 const biosLines = [
   '[ 0.000000] BIOS: ROM Revision 4.1.2',
@@ -43,15 +49,16 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
   const [biosLineCount, setBiosLineCount] = useState(1);
   const [welcomeText, setWelcomeText] = useState('Welcome');
 
-  // Unlock AudioContext on first user gesture (fixes Chrome autoplay policy)
+  // Initialize global audio unlock listeners immediately
   useEffect(() => {
     unlockAudioContext();
   }, []);
 
-  const finishBoot = () => {
+  const finishBoot = useCallback(() => {
     onComplete();
-  };
+  }, [onComplete]);
 
+  // Stage 1: BIOS scrolling naturally without any skip buttons
   useEffect(() => {
     if (phase !== 'bios') return;
 
@@ -64,31 +71,26 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
         }
         return count + 1;
       });
-    }, 210);
+    }, 130);
 
     return () => clearInterval(timer);
   }, [phase]);
 
-  // Stage 2 (Bootloader particles) -> Stage 3 ("Starting Windows") after 2.4s
+  // Stage 2 (Bootloader particles swirling): Play the boot loading orbital shimmer
   useEffect(() => {
     if (phase === 'bootloader') {
+      playBootLoadingSound();
       const timer = setTimeout(() => {
         setPhase('starting_windows');
-      }, 2400);
+      }, 2200);
       return () => clearTimeout(timer);
     }
   }, [phase]);
 
-  // Start ambient loading sound when "Starting Windows" appears
+  // Stage 3 ("Starting Windows"): Play authentic 4-chord Windows 7 startup chime
   useEffect(() => {
     if (phase === 'starting_windows') {
-      playLoadingSound();
-    }
-  }, [phase]);
-
-  // Stage 3 ("Starting Windows") -> Stage 4 (Welcome Screen Transition) after 2.8s
-  useEffect(() => {
-    if (phase === 'starting_windows') {
+      playStartupChime();
       const timer = setTimeout(() => {
         setPhase('welcome_loading');
       }, 2800);
@@ -96,51 +98,66 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     }
   }, [phase]);
 
-  // Stage 4 (Welcome Loading) -> Stage 5 (Administrator Login) after 1.8s
+  // Stage 4 (Welcome Loading) -> Stage 5 (Administrator Login) after 1.4s
   useEffect(() => {
     if (phase === 'welcome_loading') {
       const timer = setTimeout(() => {
         setPhase('login');
-      }, 1800);
+      }, 1400);
       return () => clearTimeout(timer);
     }
   }, [phase]);
 
-  useEffect(() => {
-    if (phase === 'login') {
-      const timer = setTimeout(() => handleLoginSubmit(), 1100);
-      return () => clearTimeout(timer);
-    }
-  }, [phase]);
-
-  // Handle Login submission: Stage 5 -> Stage 6 ("Welcome" -> "Preparing your desktop...")
-  const handleLoginSubmit = (e?: React.FormEvent) => {
+  // Handle Login submission: User clicks "Log on" or presses Enter -> Desktop
+  const handleLoginSubmit = useCallback((e?: React.FormEvent | React.MouseEvent) => {
     if (e) e.preventDefault();
     if (phase !== 'login') return;
 
-    // Stop loading sound and play the startup chime NOW (right after login)
-    stopLoadingSound();
+    resumeAudio().catch(() => { });
     playLoginSound();
-    playStartupChime();
     setPhase('desktop_loading');
     setWelcomeText('Welcome');
 
-    // Welcome -> Preparing desktop -> Transition to Desktop
+    // Welcome -> Preparing desktop -> Desktop
     const t1 = setTimeout(() => {
       setWelcomeText('Preparing your desktop...');
       const t2 = setTimeout(() => {
         finishBoot();
-      }, 1400);
+      }, 1200);
       return () => clearTimeout(t2);
-    }, 1400);
+    }, 1200);
 
     return () => clearTimeout(t1);
+  }, [phase, finishBoot]);
+
+  // Allow pressing Enter key to submit login
+  useEffect(() => {
+    if (phase !== 'login') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleLoginSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [phase, handleLoginSubmit]);
+
+  const handleScreenClick = () => {
+    resumeAudio().catch(() => { });
+    if (phase === 'starting_windows') {
+      playStartupChime();
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-[999999] bg-black text-white select-none overflow-hidden flex flex-col font-sans">
+    <div
+      onClick={handleScreenClick}
+      className="fixed inset-0 z-[999999] bg-black text-white select-none overflow-hidden flex flex-col font-sans cursor-default"
+    >
       {/* =========================================================================
-          STAGE 1: BIOS-STYLE STARTUP CONSOLE
+          STAGE 1: BIOS-STYLE STARTUP CONSOLE (Clean, retro, no skip button)
           ========================================================================= */}
       {phase === 'bios' && (
         <div className="flex-1 overflow-hidden bg-black px-5 py-4 font-mono text-[10px] leading-[1.55] text-[#e8e8e8] sm:px-12 sm:py-6 sm:text-xs">
@@ -162,40 +179,36 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
           <div className="relative w-48 h-48 flex items-center justify-center">
             {/* Top-Left Red Particle */}
             <div
-              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#e81123] shadow-[0_0_24px_#ef4444] transition-all duration-1000 ease-out ${
-                phase === 'bootloader'
+              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#e81123] shadow-[0_0_24px_#ef4444] transition-all duration-1000 ease-out ${phase === 'bootloader'
                   ? '-translate-x-12 -translate-y-12 scale-90 opacity-75 animate-pulse'
                   : '-translate-x-3.5 -translate-y-3.5 scale-100 opacity-95 shadow-[0_0_18px_#f87171]'
-              }`}
+                }`}
             />
 
             {/* Top-Right Green Particle */}
             <div
-              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#107c41] shadow-[0_0_24px_#10b981] transition-all duration-1000 ease-out ${
-                phase === 'bootloader'
+              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#107c41] shadow-[0_0_24px_#10b981] transition-all duration-1000 ease-out ${phase === 'bootloader'
                   ? 'translate-x-12 -translate-y-12 scale-90 opacity-75 animate-pulse'
                   : 'translate-x-3.5 -translate-y-3.5 scale-100 opacity-95 shadow-[0_0_18px_#34d399]'
-              }`}
+                }`}
               style={{ animationDelay: '0.25s' }}
             />
 
             {/* Bottom-Left Blue Particle */}
             <div
-              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#0078d7] shadow-[0_0_24px_#38bdf8] transition-all duration-1000 ease-out ${
-                phase === 'bootloader'
+              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#0078d7] shadow-[0_0_24px_#38bdf8] transition-all duration-1000 ease-out ${phase === 'bootloader'
                   ? '-translate-x-12 translate-y-12 scale-90 opacity-75 animate-pulse'
                   : '-translate-x-3.5 translate-y-3.5 scale-100 opacity-95 shadow-[0_0_18px_#60a5fa]'
-              }`}
+                }`}
               style={{ animationDelay: '0.5s' }}
             />
 
             {/* Bottom-Right Yellow Particle */}
             <div
-              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#ffb900] shadow-[0_0_24px_#facc15] transition-all duration-1000 ease-out ${
-                phase === 'bootloader'
+              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#ffb900] shadow-[0_0_24px_#facc15] transition-all duration-1000 ease-out ${phase === 'bootloader'
                   ? 'translate-x-12 translate-y-12 scale-90 opacity-75 animate-pulse'
                   : 'translate-x-3.5 translate-y-3.5 scale-100 opacity-95 shadow-[0_0_18px_#fde047]'
-              }`}
+                }`}
               style={{ animationDelay: '0.75s' }}
             />
 
@@ -218,12 +231,11 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
               </h2>
             )}
           </div>
-
         </div>
       )}
 
       {/* =========================================================================
-          STAGE 3, STAGE 4, STAGE 5: AERO BLUE WELCOME & ADMINISTRATOR LOGIN
+          STAGE 4, STAGE 5, STAGE 6: AERO BLUE WELCOME & ADMINISTRATOR LOGIN
           ========================================================================= */}
       {(phase === 'welcome_loading' || phase === 'login' || phase === 'desktop_loading') && (
         <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-[#1b5898] via-[#0b3366] to-[#041a38] font-sans animate-in fade-in duration-500">
@@ -244,7 +256,11 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
 
           <div className="z-10 flex flex-col items-center max-w-sm text-center px-4">
             {/* User Avatar Tile (Framed with authentic Windows 7 glass border) */}
-            <div className="mb-4 relative group">
+            <div
+              className={`mb-4 relative group ${phase === 'login' ? 'cursor-pointer transform hover:scale-105 transition-transform' : ''}`}
+              onClick={phase === 'login' ? handleLoginSubmit : undefined}
+              title={phase === 'login' ? 'Click to Log in' : undefined}
+            >
               <div className="p-1 rounded-lg bg-gradient-to-b from-white/80 via-white/40 to-white/60 shadow-2xl backdrop-blur-sm border border-white/70">
                 <img
                   src="/images/profile/vedant-borude.jpg"
@@ -258,11 +274,11 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
             <h1 className="text-2xl sm:text-3xl font-semibold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)] tracking-wide">
               Vedant Borude
             </h1>
-            <p className="text-xs text-sky-200 drop-shadow mb-6 font-medium tracking-wide">
+            <p className="text-xs text-sky-200 drop-shadow mb-5 font-medium tracking-wide">
               Administrator
             </p>
 
-            {/* STAGE 3: WELCOME SCREEN LOADING */}
+            {/* STAGE 4: WELCOME SCREEN LOADING */}
             {phase === 'welcome_loading' && (
               <div className="flex flex-col items-center space-y-3 animate-in fade-in duration-300">
                 <div className="w-8 h-8 rounded-full border-3 border-sky-400 border-t-transparent animate-spin" />
@@ -272,15 +288,23 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
               </div>
             )}
 
-            {/* STAGE 4: DIRECT ADMINISTRATOR LOGIN */}
+            {/* STAGE 5: DEDICATED WINDOWS 7 LOGON BUTTON (No password box, waits for click) */}
             {phase === 'login' && (
               <div className="flex flex-col items-center space-y-3 animate-in fade-in duration-400">
-                <div className="text-sm text-sky-100 drop-shadow-md">Signing in automatically...</div>
-                <div className="h-7 w-7 rounded-full border-2 border-sky-300 border-t-transparent animate-spin" />
+                <button
+                  type="button"
+                  onClick={handleLoginSubmit}
+                  className="group flex items-center gap-2.5 px-6 py-2 rounded-lg bg-gradient-to-b from-white/30 via-white/15 to-white/20 hover:from-white/40 hover:via-white/25 hover:to-white/30 active:scale-95 border border-white/60 shadow-[0_4px_16px_rgba(0,0,0,0.35)] backdrop-blur-md text-white font-medium text-sm transition-all cursor-pointer"
+                >
+                  <span>Log in</span>
+                  <span className="w-5 h-5 rounded-full bg-sky-400/40 border border-white/50 flex items-center justify-center text-xs transition-transform group-hover:translate-x-0.5">
+                    &rarr;
+                  </span>
+                </button>
               </div>
             )}
 
-            {/* STAGE 5: DESKTOP PREPARATION ANIMATION */}
+            {/* STAGE 6: DESKTOP PREPARATION ANIMATION */}
             {phase === 'desktop_loading' && (
               <div className="flex flex-col items-center space-y-3 animate-in fade-in duration-300 mt-1">
                 {/* Windows 7 Circular Loading Ring */}
