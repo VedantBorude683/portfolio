@@ -126,6 +126,7 @@ export const toggleMute = (): boolean => {
 
 export const resetStartupChime = (): void => {
   hasStartupChimePlayed = false;
+  cancelPendingStartupChime();
 };
 
 /**
@@ -359,6 +360,15 @@ const executeStartupChime = (ctx: AudioContext): void => {
   playBellTone(ctx, filter, 1244.51, t4 + 0.1, 2.8, 0.09, 2.0); // Eb6 crystalline top shimmer
 };
 
+let pendingStartupChimeUnsubscribe: (() => void) | null = null;
+
+export const cancelPendingStartupChime = (): void => {
+  if (pendingStartupChimeUnsubscribe) {
+    pendingStartupChimeUnsubscribe();
+    pendingStartupChimeUnsubscribe = null;
+  }
+};
+
 /**
  * Original synthesized harmonic startup chime
  * Plays once at "Starting Windows" or on first user activation.
@@ -373,9 +383,13 @@ export const playStartupChime = (force = false): boolean => {
 
   if (ctx.state === 'running') {
     hasStartupChimePlayed = true;
+    cancelPendingStartupChime();
     executeStartupChime(ctx);
     return true;
   }
+
+  // Cancel any prior listener
+  cancelPendingStartupChime();
 
   // If suspended, try resuming in case this was called from a user gesture
   ctx
@@ -383,6 +397,7 @@ export const playStartupChime = (force = false): boolean => {
     .then(() => {
       if (ctx.state === 'running' && (!hasStartupChimePlayed || force)) {
         hasStartupChimePlayed = true;
+        cancelPendingStartupChime();
         executeStartupChime(ctx);
       }
     })
@@ -390,6 +405,7 @@ export const playStartupChime = (force = false): boolean => {
 
   // Register clean one-time unlock hook so it plays cleanly on first real gesture
   const unsubscribe = onAudioUnlocked(() => {
+    cancelPendingStartupChime();
     if (!hasStartupChimePlayed || force) {
       hasStartupChimePlayed = true;
       const activeCtx = getAudioContext();
@@ -397,9 +413,9 @@ export const playStartupChime = (force = false): boolean => {
         executeStartupChime(activeCtx);
       }
     }
-    unsubscribe();
   });
 
+  pendingStartupChimeUnsubscribe = unsubscribe;
   return false;
 };
 

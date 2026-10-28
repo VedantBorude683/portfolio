@@ -3,7 +3,10 @@ import {
   playLoginSound,
   playStartupChime,
   playBootLoadingSound,
+  cancelPendingStartupChime,
   unlockAudioContext,
+  isAudioUnlocked,
+  onAudioUnlocked,
   resumeAudio,
 } from '../../utils/audio';
 
@@ -48,10 +51,18 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
   const [phase, setPhase] = useState<BootPhase>('bios');
   const [biosLineCount, setBiosLineCount] = useState(1);
   const [welcomeText, setWelcomeText] = useState('Welcome');
+  const [soundEnabled, setSoundEnabled] = useState(() => isAudioUnlocked());
 
   // Initialize global audio unlock listeners immediately
   useEffect(() => {
     unlockAudioContext();
+  }, []);
+
+  // Update soundEnabled state when audio is unlocked anywhere
+  useEffect(() => {
+    return onAudioUnlocked(() => {
+      setSoundEnabled(true);
+    });
   }, []);
 
   const finishBoot = useCallback(() => {
@@ -94,13 +105,18 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
       const timer = setTimeout(() => {
         setPhase('welcome_loading');
       }, 2800);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        // CRITICAL: Clean up any deferred startup chime so it NEVER leaks into login or desktop
+        cancelPendingStartupChime();
+      };
     }
   }, [phase]);
 
   // Stage 4 (Welcome Loading) -> Stage 5 (Administrator Login) after 1.4s
   useEffect(() => {
     if (phase === 'welcome_loading') {
+      cancelPendingStartupChime();
       const timer = setTimeout(() => {
         setPhase('login');
       }, 1400);
@@ -113,7 +129,9 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     if (e) e.preventDefault();
     if (phase !== 'login') return;
 
-    resumeAudio().catch(() => { });
+    // Explicitly guarantee no startup chime plays on login
+    cancelPendingStartupChime();
+    resumeAudio().catch(() => {});
     playLoginSound();
     setPhase('desktop_loading');
     setWelcomeText('Welcome');
@@ -145,10 +163,17 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
   }, [phase, handleLoginSubmit]);
 
   const handleScreenClick = () => {
-    resumeAudio().catch(() => { });
-    if (phase === 'starting_windows') {
-      playStartupChime();
-    }
+    resumeAudio()
+      .then((unlocked) => {
+        if (!unlocked) return;
+        setSoundEnabled(true);
+        if (phase === 'bootloader') {
+          playBootLoadingSound();
+        } else if (phase === 'starting_windows') {
+          playStartupChime();
+        }
+      })
+      .catch(() => {});
   };
 
   return (
@@ -156,6 +181,22 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
       onClick={handleScreenClick}
       className="fixed inset-0 z-[999999] bg-black text-white select-none overflow-hidden flex flex-col font-sans cursor-default"
     >
+      {/* =========================================================================
+          AUDIO INDICATOR BADGE (Subtle top-right pill if browser blocked autoplay)
+          ========================================================================= */}
+      {!soundEnabled && (phase === 'bios' || phase === 'bootloader' || phase === 'starting_windows') && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            handleScreenClick();
+          }}
+          className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 text-xs text-sky-200 backdrop-blur-md shadow-lg cursor-pointer transition-all animate-pulse"
+        >
+          <span>🔊</span>
+          <span className="font-medium">Click for sound</span>
+        </div>
+      )}
+
       {/* =========================================================================
           STAGE 1: BIOS-STYLE STARTUP CONSOLE (Clean, retro, no skip button)
           ========================================================================= */}
@@ -179,36 +220,40 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
           <div className="relative w-48 h-48 flex items-center justify-center">
             {/* Top-Left Red Particle */}
             <div
-              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#e81123] shadow-[0_0_24px_#ef4444] transition-all duration-1000 ease-out ${phase === 'bootloader'
+              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#e81123] shadow-[0_0_24px_#ef4444] transition-all duration-1000 ease-out ${
+                phase === 'bootloader'
                   ? '-translate-x-12 -translate-y-12 scale-90 opacity-75 animate-pulse'
                   : '-translate-x-3.5 -translate-y-3.5 scale-100 opacity-95 shadow-[0_0_18px_#f87171]'
-                }`}
+              }`}
             />
 
             {/* Top-Right Green Particle */}
             <div
-              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#107c41] shadow-[0_0_24px_#10b981] transition-all duration-1000 ease-out ${phase === 'bootloader'
+              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#107c41] shadow-[0_0_24px_#10b981] transition-all duration-1000 ease-out ${
+                phase === 'bootloader'
                   ? 'translate-x-12 -translate-y-12 scale-90 opacity-75 animate-pulse'
                   : 'translate-x-3.5 -translate-y-3.5 scale-100 opacity-95 shadow-[0_0_18px_#34d399]'
-                }`}
+              }`}
               style={{ animationDelay: '0.25s' }}
             />
 
             {/* Bottom-Left Blue Particle */}
             <div
-              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#0078d7] shadow-[0_0_24px_#38bdf8] transition-all duration-1000 ease-out ${phase === 'bootloader'
+              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#0078d7] shadow-[0_0_24px_#38bdf8] transition-all duration-1000 ease-out ${
+                phase === 'bootloader'
                   ? '-translate-x-12 translate-y-12 scale-90 opacity-75 animate-pulse'
                   : '-translate-x-3.5 translate-y-3.5 scale-100 opacity-95 shadow-[0_0_18px_#60a5fa]'
-                }`}
+              }`}
               style={{ animationDelay: '0.5s' }}
             />
 
             {/* Bottom-Right Yellow Particle */}
             <div
-              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#ffb900] shadow-[0_0_24px_#facc15] transition-all duration-1000 ease-out ${phase === 'bootloader'
+              className={`absolute w-7 h-7 rounded-sm transform rotate-3 bg-[#ffb900] shadow-[0_0_24px_#facc15] transition-all duration-1000 ease-out ${
+                phase === 'bootloader'
                   ? 'translate-x-12 translate-y-12 scale-90 opacity-75 animate-pulse'
                   : 'translate-x-3.5 translate-y-3.5 scale-100 opacity-95 shadow-[0_0_18px_#fde047]'
-                }`}
+              }`}
               style={{ animationDelay: '0.75s' }}
             />
 
@@ -259,7 +304,7 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
             <div
               className={`mb-4 relative group ${phase === 'login' ? 'cursor-pointer transform hover:scale-105 transition-transform' : ''}`}
               onClick={phase === 'login' ? handleLoginSubmit : undefined}
-              title={phase === 'login' ? 'Click to Log in' : undefined}
+              title={phase === 'login' ? 'Click to Log on' : undefined}
             >
               <div className="p-1 rounded-lg bg-gradient-to-b from-white/80 via-white/40 to-white/60 shadow-2xl backdrop-blur-sm border border-white/70">
                 <img
@@ -296,7 +341,7 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
                   onClick={handleLoginSubmit}
                   className="group flex items-center gap-2.5 px-6 py-2 rounded-lg bg-gradient-to-b from-white/30 via-white/15 to-white/20 hover:from-white/40 hover:via-white/25 hover:to-white/30 active:scale-95 border border-white/60 shadow-[0_4px_16px_rgba(0,0,0,0.35)] backdrop-blur-md text-white font-medium text-sm transition-all cursor-pointer"
                 >
-                  <span>Log in</span>
+                  <span>Log on</span>
                   <span className="w-5 h-5 rounded-full bg-sky-400/40 border border-white/50 flex items-center justify-center text-xs transition-transform group-hover:translate-x-0.5">
                     &rarr;
                   </span>
