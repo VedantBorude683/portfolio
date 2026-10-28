@@ -5,8 +5,6 @@ import {
   playBootLoadingSound,
   cancelPendingStartupChime,
   unlockAudioContext,
-  isAudioUnlocked,
-  onAudioUnlocked,
   resumeAudio,
 } from '../../utils/audio';
 
@@ -51,25 +49,18 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
   const [phase, setPhase] = useState<BootPhase>('bios');
   const [biosLineCount, setBiosLineCount] = useState(1);
   const [welcomeText, setWelcomeText] = useState('Welcome');
-  const [soundEnabled, setSoundEnabled] = useState(() => isAudioUnlocked());
 
-  // Initialize global audio unlock listeners immediately
+  // Initialize global audio unlock listeners immediately and attempt autoplay
   useEffect(() => {
     unlockAudioContext();
-  }, []);
-
-  // Update soundEnabled state when audio is unlocked anywhere
-  useEffect(() => {
-    return onAudioUnlocked(() => {
-      setSoundEnabled(true);
-    });
+    resumeAudio().catch(() => {});
   }, []);
 
   const finishBoot = useCallback(() => {
     onComplete();
   }, [onComplete]);
 
-  // Stage 1: BIOS scrolling naturally without any skip buttons
+  // Stage 1: BIOS scrolling naturally
   useEffect(() => {
     if (phase !== 'bios') return;
 
@@ -87,7 +78,7 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     return () => clearInterval(timer);
   }, [phase]);
 
-  // Stage 2 (Bootloader particles swirling): Play the boot loading orbital shimmer
+  // Stage 2 (Bootloader particles swirling): Auto-play the boot loading orbital shimmer
   useEffect(() => {
     if (phase === 'bootloader') {
       playBootLoadingSound();
@@ -98,7 +89,7 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     }
   }, [phase]);
 
-  // Stage 3 ("Starting Windows"): Play authentic 4-chord Windows 7 startup chime
+  // Stage 3 ("Starting Windows"): Auto-play authentic 4-chord Windows 7 startup chime
   useEffect(() => {
     if (phase === 'starting_windows') {
       playStartupChime();
@@ -107,7 +98,7 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
       }, 2800);
       return () => {
         clearTimeout(timer);
-        // CRITICAL: Clean up any deferred startup chime so it NEVER leaks into login or desktop
+        // Clean up any deferred startup chime so it NEVER leaks into login or desktop
         cancelPendingStartupChime();
       };
     }
@@ -166,7 +157,6 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
     resumeAudio()
       .then((unlocked) => {
         if (!unlocked) return;
-        setSoundEnabled(true);
         if (phase === 'bootloader') {
           playBootLoadingSound();
         } else if (phase === 'starting_windows') {
@@ -182,23 +172,7 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
       className="fixed inset-0 z-[999999] bg-black text-white select-none overflow-hidden flex flex-col font-sans cursor-default"
     >
       {/* =========================================================================
-          AUDIO INDICATOR BADGE (Subtle top-right pill if browser blocked autoplay)
-          ========================================================================= */}
-      {!soundEnabled && (phase === 'bios' || phase === 'bootloader' || phase === 'starting_windows') && (
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            handleScreenClick();
-          }}
-          className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 text-xs text-sky-200 backdrop-blur-md shadow-lg cursor-pointer transition-all animate-pulse"
-        >
-          <span>🔊</span>
-          <span className="font-medium">Click for sound</span>
-        </div>
-      )}
-
-      {/* =========================================================================
-          STAGE 1: BIOS-STYLE STARTUP CONSOLE (Clean, retro, no skip button)
+          STAGE 1: BIOS-STYLE STARTUP CONSOLE (Clean, retro, no buttons)
           ========================================================================= */}
       {phase === 'bios' && (
         <div className="flex-1 overflow-hidden bg-black px-5 py-4 font-mono text-[10px] leading-[1.55] text-[#e8e8e8] sm:px-12 sm:py-6 sm:text-xs">
@@ -333,7 +307,7 @@ export const BootSequence: React.FC<BootSequenceProps> = ({ onComplete }) => {
               </div>
             )}
 
-            {/* STAGE 5: DEDICATED WINDOWS 7 LOGON BUTTON (No password box, waits for click) */}
+            {/* STAGE 5: DEDICATED WINDOWS 7 LOGON BUTTON (Waits for user click) */}
             {phase === 'login' && (
               <div className="flex flex-col items-center space-y-3 animate-in fade-in duration-400">
                 <button

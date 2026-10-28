@@ -47,13 +47,19 @@ export const unlockAudioContext = (): void => {
   if (typeof window === 'undefined') return;
   const ctx = getAudioContext();
   if (ctx && ctx.state === 'running') return;
+
+  // Immediately attempt to resume in background on call (enables autoplay where browser allows)
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+
   if (unlockListenersAttached) return;
 
-  const validEvents = ['pointerdown', 'mousedown', 'keydown', 'touchstart'];
+  const validEvents = ['pointerdown', 'mousedown', 'keydown', 'touchstart', 'touchend', 'wheel'];
 
   const notifyUnlocked = () => {
     validEvents.forEach((evt) => {
-      window.removeEventListener(evt, handleUserGesture);
+      window.removeEventListener(evt, handleUserGesture, { capture: true });
     });
     unlockListenersAttached = false;
     const callbacks = [...unlockCallbacks];
@@ -87,7 +93,7 @@ export const unlockAudioContext = (): void => {
 
   unlockListenersAttached = true;
   validEvents.forEach((evt) => {
-    window.addEventListener(evt, handleUserGesture, { passive: true });
+    window.addEventListener(evt, handleUserGesture, { passive: true, capture: true });
   });
 };
 
@@ -172,62 +178,78 @@ export const playBiosBeep = (): void => {
 export const playBootLoadingSound = (): void => {
   if (isMuted) return;
   const ctx = getAudioContext();
-  if (!ctx || ctx.state !== 'running') return;
+  if (!ctx) return;
 
-  const now = ctx.currentTime;
-  const master = ctx.createGain();
-  master.gain.setValueAtTime(0.0001, now);
-  master.gain.linearRampToValueAtTime(0.22, now + 0.3);
-  master.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
-  master.connect(ctx.destination);
+  const trigger = (c: AudioContext) => {
+    if (c.state !== 'running') return;
+    const now = c.currentTime;
+    const master = c.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.linearRampToValueAtTime(0.22, now + 0.3);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+    master.connect(c.destination);
 
-  // Soft filtered ethereal sweep
-  const bufferSize = Math.floor(ctx.sampleRate * 1.8);
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    data[i] = (Math.random() * 2 - 1) * 0.3;
+    // Soft filtered ethereal sweep
+    const bufferSize = Math.floor(c.sampleRate * 1.8);
+    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.3;
+    }
+    const noise = c.createBufferSource();
+    noise.buffer = buffer;
+    const sweepFilter = c.createBiquadFilter();
+    sweepFilter.type = 'bandpass';
+    sweepFilter.Q.value = 3.5;
+    sweepFilter.frequency.setValueAtTime(350, now);
+    sweepFilter.frequency.exponentialRampToValueAtTime(1400, now + 1.6);
+    const sweepGain = c.createGain();
+    sweepGain.gain.setValueAtTime(0.0001, now);
+    sweepGain.gain.linearRampToValueAtTime(0.06, now + 0.4);
+    sweepGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+    noise.connect(sweepFilter);
+    sweepFilter.connect(sweepGain);
+    sweepGain.connect(master);
+    noise.start(now);
+    noise.stop(now + 1.9);
+
+    // 4 delicate crystalline glissando pings as the 4 particles emerge
+    const particleTones = [
+      { freq: 523.25, delay: 0.0 },  // C5 (Red)
+      { freq: 659.25, delay: 0.28 }, // E5 (Green)
+      { freq: 783.99, delay: 0.56 }, // G5 (Blue)
+      { freq: 1046.5, delay: 0.84 }, // C6 (Yellow)
+    ];
+
+    particleTones.forEach(({ freq, delay }) => {
+      const t = now + delay;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.04, t + 0.35);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.linearRampToValueAtTime(0.07, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.00001, t + 0.7);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(t);
+      osc.stop(t + 0.75);
+    });
+  };
+
+  if (ctx.state === 'running') {
+    trigger(ctx);
+  } else {
+    ctx
+      .resume()
+      .then(() => {
+        if (ctx.state === 'running') {
+          trigger(ctx);
+        }
+      })
+      .catch(() => {});
   }
-  const noise = ctx.createBufferSource();
-  noise.buffer = buffer;
-  const sweepFilter = ctx.createBiquadFilter();
-  sweepFilter.type = 'bandpass';
-  sweepFilter.Q.value = 3.5;
-  sweepFilter.frequency.setValueAtTime(350, now);
-  sweepFilter.frequency.exponentialRampToValueAtTime(1400, now + 1.6);
-  const sweepGain = ctx.createGain();
-  sweepGain.gain.setValueAtTime(0.0001, now);
-  sweepGain.gain.linearRampToValueAtTime(0.06, now + 0.4);
-  sweepGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
-  noise.connect(sweepFilter);
-  sweepFilter.connect(sweepGain);
-  sweepGain.connect(master);
-  noise.start(now);
-  noise.stop(now + 1.9);
-
-  // 4 delicate crystalline glissando pings as the 4 particles emerge
-  const particleTones = [
-    { freq: 523.25, delay: 0.0 },  // C5 (Red)
-    { freq: 659.25, delay: 0.28 }, // E5 (Green)
-    { freq: 783.99, delay: 0.56 }, // G5 (Blue)
-    { freq: 1046.5, delay: 0.84 }, // C6 (Yellow)
-  ];
-
-  particleTones.forEach(({ freq, delay }) => {
-    const t = now + delay;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, t);
-    osc.frequency.exponentialRampToValueAtTime(freq * 1.04, t + 0.35);
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.linearRampToValueAtTime(0.07, t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.00001, t + 0.7);
-    osc.connect(gain);
-    gain.connect(master);
-    osc.start(t);
-    osc.stop(t + 0.75);
-  });
 };
 
 /**
